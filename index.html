@@ -3,793 +3,631 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ລະບົບອອກໃບຢັ້ງຢືນຈົບການສຶກສາ (Temporary Graduation Certificate System)</title>
+    <title>ລະບົບອອກໃບຢັ້ງຢືນຈົບການສຶກສາ</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts & Lao Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- SheetJS CDN for Excel Export -->
+    <!-- SheetJS for Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        lao: ['Phetsarath OT', 'Noto Sans Lao', 'sans-serif'],
-                    },
-                    colors: {
-                        laoblue: '#002B7F',
-                        laored: '#CE1126',
-                        laogold: '#D4AF37'
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        /* Phetsarath OT Web Font Definition */
         @font-face {
             font-family: 'Phetsarath OT';
-            src: url('https://db.onlinewebfonts.com/t/2c40c5f2b604561858c4224c61993414.woff2') format('woff2');
-            font-weight: normal;
-            font-style: normal;
+            src: url('https://fonts.cdnfonts.com/s/15074/Phetsarath-Regular.woff') format('woff');
         }
-        
         body {
-            font-family: 'Phetsarath OT', 'Noto Sans Lao', sans-serif;
-            background-color: #f8fafc;
+            font-family: 'Phetsarath OT', sans-serif;
+            background-color: #f3f4f6;
         }
         @media print {
-            .no-print {
-                display: none !important;
-            }
-            .print-only {
-                display: block !important;
-            }
-            body {
-                background-color: white;
-            }
-            .certificate-container {
-                box-shadow: none !important;
-                border: none !important;
-                padding: 0 !important;
-                margin: 0 !important;
-                width: 100% !important;
-            }
-        }
-        .certificate-border {
-            border: 10px double #002B7F;
-            outline: 2px solid #D4AF37;
-            outline-offset: -6px;
+            body * { visibility: hidden; }
+            #certificateModal, #certificateModal * { visibility: visible; }
+            #certificateModal { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white; }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col font-lao">
+<body class="min-h-screen flex flex-col">
 
-    <!-- Header / Navigation Bar -->
-    <header class="bg-laoblue text-white shadow-lg no-print">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-3">
-                    <div class="bg-white text-laoblue p-2 rounded-lg font-bold">
-                        <i class="fa-solid me-1 fa-graduation-cap text-xl"></i>
-                    </div>
-                    <div>
-                        <h1 class="font-bold text-lg leading-tight">ລະບົບອອກໃບຢັ້ງຢືນຈົບການສຶກສາ</h1>
-                        <p class="text-xs text-blue-200">Temporary Graduation Certificate System</p>
-                    </div>
+    <!-- Header -->
+    <header class="bg-blue-900 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white/10 p-2 rounded-lg">
+                    <svg class="w-8 h-8 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                    </svg>
                 </div>
-                <div class="flex items-center space-x-3" id="nav-user-controls">
-                    <!-- Auth elements dynamically loaded -->
+                <div>
+                    <h1 class="text-xl font-bold">ລະບົບອອກໃບຢັ້ງຢືນຈົບການສຶກສາ</h1>
+                    <p class="text-xs text-blue-200">Temporary Graduation Certificate System</p>
                 </div>
+            </div>
+            <div>
+                <button onclick="openLoginModal()" id="authBtn" class="bg-blue-800 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition flex items-center space-x-2 border border-blue-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+                    <span id="authBtnText">ເຂົ້າສູ່ລະບົບ (Staff)</span>
+                </button>
             </div>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 no-print">
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full">
         
-        <!-- Action Toolbar / Nav Tabs -->
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-            <div class="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200 w-full md:w-auto">
-                <button id="tab-btn-records" onclick="switchTab('records')" class="flex-1 md:flex-none px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2 bg-laoblue text-white shadow">
-                    <i class="fa-solid fa-list-check"></i>
+        <!-- Navigation Tabs & Actions -->
+        <div class="flex flex-col md:flex-row justify-between items-stretch md:items-center mb-6 gap-4 bg-white p-4 rounded-xl shadow-sm">
+            <div class="flex space-x-2">
+                <button onclick="switchTab('list')" id="tabList" class="px-4 py-2.5 rounded-lg text-sm font-medium transition flex items-center space-x-2 bg-blue-900 text-white">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                     <span>ລາຍຊື່ນັກສຶກສາ</span>
                 </button>
-                <button id="tab-btn-add" onclick="switchTab('add')" class="flex-1 md:flex-none px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2 text-slate-600 hover:bg-slate-100">
-                    <i class="fa-solid fa-user-plus"></i>
+                <button onclick="switchTab('form')" id="tabForm" class="px-4 py-2.5 rounded-lg text-sm font-medium transition flex items-center space-x-2 bg-gray-100 text-gray-700 hover:bg-gray-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
                     <span>ບັນທຶກຂໍ້ມູນໃໝ່</span>
                 </button>
             </div>
-
-            <div class="flex items-center space-x-2 w-full md:w-auto justify-end">
-                <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium shadow transition flex items-center space-x-2 cursor-pointer">
-                    <i class="fa-solid fa-file-excel text-lg"></i>
+            <div>
+                <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition flex items-center space-x-2 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     <span>ສົ່ງອອກເປັນ Excel</span>
                 </button>
             </div>
         </div>
 
-        <!-- TAB 1: DATA LIST / REPORTS -->
-        <section id="tab-records" class="block space-y-4">
-            <!-- Search & Filters -->
-            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-4">
-                <div class="relative flex-grow">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-3.5 text-slate-400"></i>
-                    <input type="text" id="search-input" oninput="filterData()" placeholder="ຄົ້ນຫາຕາມ ຊື່, ນາມສະກຸນ, ຫຼື ລະຫັດນັກສຶກສາ..." class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none">
+        <!-- Section 1: Student List -->
+        <div id="sectionList" class="space-y-4">
+            <!-- Search & Filter Bar -->
+            <div class="bg-white p-4 rounded-xl shadow-sm grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </span>
+                    <input type="text" id="searchInput" oninput="renderTable()" placeholder="ຄົ້ນຫາຕາມ ຊື່, ນາມສະກຸນ, ຫຼື ລະຫັດ..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
-                <div class="w-full md:w-64">
-                    <select id="filter-province" onchange="filterData()" class="w-full py-2.5 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none bg-white">
+                <div>
+                    <select id="filterProvince" onchange="renderTable()" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">-- ທຸກໆແຂວງ --</option>
+                        <option value="ແຂວງ ວຽງຈັນ">ແຂວງ ວຽງຈັນ</option>
+                        <option value="ແຂວງ ໄຊສົມບູນ">ແຂວງ ໄຊສົມບູນ</option>
+                        <option value="ແຂວງ ບໍລິຄຳໄຊ">ແຂວງ ບໍລິຄຳໄຊ</option>
+                        <option value="ແຂວງ ຄຳມ່ວນ">ແຂວງ ຄຳມ່ວນ</option>
+                        <option value="ແຂວງ ເຊກອງ">ແຂວງ ເຊກອງ</option>
+                        <option value="ແຂວງ ອັດຕະປື">ແຂວງ ອັດຕະປື</option>
+                        <option value="ແຂວງ ສາລະວັນ">ແຂວງ ສາລະວັນ</option>
+                        <option value="ແຂວງ ຈຳປາສັກ">ແຂວງ ຈຳປາສັກ</option>
+                        <option value="ແຂວງ ສະຫວັນນະເຂດ">ແຂວງ ສະຫວັນນະເຂດ</option>
+                        <option value="ແຂວງ ນະຄອນຫຼວງວຽງຈັນ">ແຂວງ ນະຄອນຫຼວງວຽງຈັນ</option>
+                        <option value="ແຂວງ ຜົ້ງສາລີ">ແຂວງ ຜົ້ງສາລີ</option>
+                        <option value="ແຂວງ ຫຼວງນ້ຳທາ">ແຂວງ ຫຼວງນ້ຳທາ</option>
+                        <option value="ແຂວງ ຊຽງຂວາງ">ແຂວງ ຊຽງຂວາງ</option>
+                        <option value="ແຂວງ ໄຊຍະບູລີ">ແຂວງ ໄຊຍະບູລີ</option>
+                        <option value="ແຂວງ ຫຼວງພະບາງ">ແຂວງ ຫຼວງພະບາງ</option>
+                        <option value="ແຂວງ ອຸດົມໄຊ">ແຂວງ ອຸດົມໄຊ</option>
+                        <option value="ແຂວງ ຫົວພັນ">ແຂວງ ຫົວພັນ</option>
+                        <option value="ແຂວງ ບໍ່ແກ້ວ">ແຂວງ ບໍ່ແກ້ວ</option>
+                        
                     </select>
                 </div>
-                <div class="w-full md:w-64">
-                    <select id="filter-faculty" onchange="filterData()" class="w-full py-2.5 px-3 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none bg-white">
+                <div>
+                    <select id="filterMajor" onchange="renderTable()" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">-- ທຸກໆສາຂາວິຊາ --</option>
                         <option value="ວິທະຍາສາດຄອມພິວເຕີ">ວິທະຍາສາດຄອມພິວເຕີ</option>
                         <option value="ພາສາອັງກິດ">ພາສາອັງກິດ</option>
+                        
                     </select>
                 </div>
             </div>
 
-            <!-- Table -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+            <!-- Table View -->
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-sm">
-                        <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
-                            <tr>
-                                <th class="p-4">ລະຫັດ</th>
-                                <th class="p-4">ຊື່ ແລະ ນາມສະກຸນ</th>
-                                <th class="p-4">ວັນເດືອນປີເກີດ</th>
-                                <th class="p-4">ທີ່ຢູ່ປັດຈຸບັນ</th>
-                                <th class="p-4">ສາຂາວິຊາ</th>
-                                <th class="p-4">ປີຈົບ</th>
-                                <th class="p-4 text-center">ຈັດການ / ແອັກຊັນ</th>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200 text-gray-600 text-xs uppercase tracking-wider">
+                                <th class="p-4 font-semibold">ລະຫັດ</th>
+                                <th class="p-4 font-semibold">ຊື່ ແລະ ນາມສະກຸນ</th>
+                                <th class="p-4 font-semibold">ວັນເດືອນປີເກີດ</th>
+                                <th class="p-4 font-semibold">ທີ່ຢູ່ປັດຈຸບັນ</th>
+                                <th class="p-4 font-semibold">ສາຂາວິຊາ</th>
+                                <th class="p-4 font-semibold">ປີຈົບ</th>
+                                <th class="p-4 font-semibold text-center">ຈັດການ</th>
                             </tr>
                         </thead>
-                        <tbody id="student-table-body" class="divide-y divide-slate-100">
-                            <!-- Dynamic Content -->
+                        <tbody id="studentTableBody" class="divide-y divide-gray-200 text-sm text-gray-700">
+                            <!-- Populated by JS -->
                         </tbody>
                     </table>
                 </div>
-                <div id="no-data-msg" class="hidden p-8 text-center text-slate-400">
-                    <i class="fa-solid fa-folder-open text-4xl mb-2"></i>
-                    <p>ບໍ່ພົບຂໍ້ມູນນັກສຶກສາ</p>
+                <div id="emptyState" class="hidden p-8 text-center text-gray-500">
+                    ບໍ່ພົບຂໍ້ມູນນັກສຶກສາໃນລະບົບ
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- TAB 2: STUDENT ENTRY / EDIT FORM -->
-        <section id="tab-add" class="hidden">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 max-w-3xl mx-auto overflow-hidden">
-                <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center">
-                    <h2 class="font-bold text-slate-700 text-lg flex items-center gap-2" id="form-title">
-                        <i class="fa-solid fa-id-card text-laoblue"></i>
-                        <span>ຟອມບັນທຶກຂໍ້ມູນນັກສຶກສາ</span>
-                    </h2>
-                    <span class="text-xs bg-blue-100 text-laoblue font-medium px-2.5 py-1 rounded-full">ກະລຸນາປ້ອນຂໍ້ມູນໃຫ້ຄົບຖ້ວນ</span>
+        <!-- Section 2: Student Form -->
+        <div id="sectionForm" class="hidden bg-white rounded-xl shadow-sm p-6 md:p-8 max-w-4xl mx-auto">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-100">
+                <div>
+                    <h2 class="text-lg font-bold text-gray-800" id="formTitle">ຟອມບັນທຶກຂໍ້ມູນນັກສຶກສາ</h2>
+                    <p class="text-xs text-gray-500">ກະລຸນາປ້ອນຂໍ້ມູນໃຫ້ຄົບຖ້ວນ</p>
+                </div>
+                <button onclick="resetForm()" class="text-xs text-blue-600 hover:underline">ລ້າງຟອມ</button>
+            </div>
+
+            <form id="studentForm" onsubmit="saveStudent(event)" class="space-y-6">
+                <input type="hidden" id="editIndex" value="">
+
+                <!-- Auto ID Info Box -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex justify-between items-center">
+                    <div class="flex items-center space-x-2 text-blue-800 text-sm">
+                        <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span>ລະຫັດນັກສຶກສາຖືກສ້າງອັດຕະໂນມັດ (Auto-Generated)</span>
+                    </div>
+                    <span id="displayGenId" class="font-bold text-blue-900 bg-white px-3 py-1 rounded border border-blue-300">STD-2026-001</span>
                 </div>
 
-                <form id="student-form" onsubmit="handleFormSubmit(event)" class="p-6 space-y-6">
-                    <input type="hidden" id="student-id" value="">
-
-                    <!-- Auto-generated Info Notice -->
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs text-slate-600 flex justify-between items-center">
-                        <span><i class="fa-solid fa-circle-info text-laoblue me-1"></i> ລະຫັດນັກສຶກສາຈະຖືກສ້າງອັດຕະໂນມັດ (Auto-Generated)</span>
-                        <span id="preview-auto-code" class="font-bold text-laoblue">STD-2026-XXX</span>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">ຄຳນຳໜ້າຊື່ *</label>
+                        <select id="prefix" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- ເລືອກຄຳນຳໜ້າ --</option>
+                            <option value="ທ້າວ">ທ້າວ</option>
+                            <option value="ນາງ">ນາງ</option>
+                            <option value="ສຳມະເນນ">ສຳມະເນນ</option>
+                            <option value="ຄູບາ">ຄູບາ</option>
+                        </select>
                     </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">ຊື່ (FIRST NAME) *</label>
+                        <input type="text" id="firstName" required placeholder="ປ້ອນຊື່" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">ນາມສະກຸນ (LAST NAME) *</label>
+                        <input type="text" id="lastName" required placeholder="ປ້ອນນາມສະກຸນ" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
 
-                    <!-- Prefix & Names Group -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">ວັນເດືອນປີເກີດ (DATE OF BIRTH) *</label>
+                        <input type="date" id="dob" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">ສາຂາວິຊາ *</label>
+                        <select id="major" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">-- ເລືອກສາຂາວິຊາ --</option>
+                            <option value="ວິທະຍາສາດຄອມພິວເຕີ">ວິທະຍາສາດຄອມພິວເຕີ</option>
+                            <option value="ພາສາອັງກິດ">ພາສາອັງກິດ</option>
+                           
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Address Group -->
+                <div class="border-t border-gray-100 pt-4">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-3">ທີ່ຢູ່ປັດຈຸບັນ (CURRENT ADDRESS) *</label>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">ຄຳນຳໜ້າຊື່ *</label>
-                            <input type="text" id="prefix-name" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none" placeholder="ທ້າວ / ນາງ / ສຳມະເນນ">
+                            <input type="text" id="village" required placeholder="ບ້ານ (Village)" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">ຊື່ (First Name) *</label>
-                            <input type="text" id="firstname" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none" placeholder="ປ້ອນຊື່">
+                            <select id="province" required onchange="updateDistricts()" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">-- ເລືອກແຂວງ --</option>
+                            </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">ນາມສະກຸນ (Last Name) *</label>
-                            <input type="text" id="lastname" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none" placeholder="ປ້ອນນາມສະກຸນ">
-                        </div>
-                    </div>
-
-                    <!-- Single Date Picker Field & Faculty -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">ວັນເດືອນປີເກີດ (Date of Birth) *</label>
-                            <input type="date" id="dob-date" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none bg-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">ສາຂາວິຊາ/ຄະນະ *</label>
-                            <select id="faculty" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none bg-white">
-                                <option value="">-- ເລືອກສາຂາວິຊາ --</option>
-                                <option value="ວິທະຍາສາດຄອມພິວເຕີ">ວິທະຍາສາດຄອມພິວເຕີ</option>
-                                <option value="ພາສາອັງກິດ">ພາສາອັງກິດ</option>
+                            <select id="district" required class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="">-- ເລືອກເມືອງ --</option>
                             </select>
                         </div>
                     </div>
-
-                    <!-- Address Information -->
-                    <div class="border-t border-slate-200 pt-4">
-                        <label class="block text-xs font-bold text-slate-700 uppercase mb-3">ທີ່ຢູ່ປັດຈຸບັນ (Current Address) *</label>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div>
-                                <label class="block text-xs text-slate-500 mb-1">ບ້ານ (Village)</label>
-                                <input type="text" id="village" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none" placeholder="ປ້ອນບ້ານ">
-                            </div>
-                            <div>
-                                <label class="block text-xs text-slate-500 mb-1">ແຂວງ (Province)</label>
-                                <select id="province" onchange="onProvinceChange()" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none bg-white">
-                                    <option value="">-- ເລືອກແຂວງ --</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs text-slate-500 mb-1">ເມືອງ (District)</label>
-                                <select id="district" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none bg-white">
-                                    <option value="">-- ເລືອກເມືອງ --</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Graduation Details -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-200 pt-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">ປີທີ່ຈົບການສຶກສາ *</label>
-                            <input type="number" id="grad-year" required min="2000" max="2099" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none" placeholder="2023">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase mb-1">ເກຼດສະເລ່ຍ (GPA)</label>
-                            <input type="number" id="gpa" step="0.01" min="0" max="4.00" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none" placeholder="3.50">
-                        </div>
-                    </div>
-
-                    <!-- Form Actions -->
-                    <div class="flex justify-end space-x-3 pt-4 border-t border-slate-200">
-                        <button type="button" onclick="switchTab('records')" class="px-5 py-2.5 rounded-lg text-sm font-medium border border-slate-300 text-slate-600 hover:bg-slate-100 transition cursor-pointer">
-                            ຍົກເລີກ
-                        </button>
-                        <button type="submit" class="px-6 py-2.5 rounded-lg text-sm font-semibold bg-laoblue hover:bg-blue-900 text-white shadow transition flex items-center gap-2 cursor-pointer">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                            <span>ບັນທຶກຂໍ້ມູນ</span>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </section>
-    </main>
-
-    <!-- CERTIFICATE PRINT TEMPLATE MODAL -->
-    <div id="cert-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 overflow-y-auto no-print">
-        <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full my-8 overflow-hidden flex flex-col max-h-[90vh]">
-            <!-- Modal Header Toolbar -->
-            <div class="bg-slate-800 text-white px-6 py-3 flex justify-between items-center">
-                <span class="font-bold text-sm"><i class="fa-solid fa-print me-2"></i>ຕົວຢ່າງໃບຢັ້ງຢືນຈົບການສຶກສາ</span>
-                <div class="flex items-center space-x-2">
-                    <button onclick="triggerPrint()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded text-xs font-bold transition flex items-center gap-1 cursor-pointer">
-                        <i class="fa-solid fa-print"></i> ພິມເອກະສານ
-                    </button>
-                    <button onclick="closeCertModal()" class="text-slate-400 hover:text-white text-xl px-2 cursor-pointer">
-                        &times;
-                    </button>
                 </div>
-            </div>
 
-            <!-- Certificate Printable Content Container -->
-            <div class="p-6 overflow-y-auto flex-grow bg-slate-200">
-                <div id="printable-certificate" class="bg-white p-10 mx-auto certificate-border relative text-slate-900 shadow-md max-w-[800px]">
-                    <!-- National Emblem & Header -->
-                    <div class="text-center space-y-1">
-                        <p class="font-bold text-sm">ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</p>
-                        <p class="font-bold text-xs">ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</p>
-                        <div class="text-xs tracking-widest my-1">------000------</div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-100 pt-4">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">ປີທີ່ຈົບການສຶກສາ *</label>
+                        <input type="number" id="graduationYear" required value=" " class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-
-                    <div class="flex justify-between items-start mt-4 text-xs font-semibold">
-                        <div>
-                            <p>ກະຊວງສຶກສາທິການ ແລະ ກິລາ</p>
-                            <p>ສະຖາບັນການສຶກສາຊັ້ນສູງ</p>
-                        </div>
-                        <div class="text-right">
-                            <p>ເລກທີ: <span id="cert-doc-no" class="font-normal">102/ສສ</span></p>
-                        </div>
-                    </div>
-
-                    <!-- Certificate Title -->
-                    <div class="text-center my-6">
-                        <h1 class="text-2xl font-bold tracking-wide text-laoblue uppercase">ໃບຢັ້ງຢືນຈົບການສຶກສາ</h1>
-                        <p class="text-xs text-slate-500 italic mt-1">(ລໍຖ້າຮັບໃບປະກາດສະນີຍະບັດ)</p>
-                    </div>
-
-                    <!-- Body Text -->
-                    <div class="space-y-4 text-sm leading-relaxed text-justify px-4">
-                        <p class="indent-8">
-                            ຫົວໜ້າສະຖາບັນການສຶກສາ ຂໍຢັ້ງຢືນວ່າ: <span id="cert-fullname" class="font-bold text-base underline underline-offset-4 decoration-dotted px-1"></span>, 
-                            ເກີດວັນທີ <span id="cert-dob-formatted" class="font-bold"></span>, 
-                            ທີ່ຢູ່ປັດຈຸບັນ: ບ້ານ <span id="cert-village" class="font-semibold"></span>, 
-                            ເມືອງ <span id="cert-district" class="font-semibold"></span>, 
-                            ແຂວງ <span id="cert-province" class="font-semibold"></span>.
-                        </p>
-
-                        <p class="indent-8">
-                            ໄດ້ສຳເລັດການສຶກສາ ຫຼັກສູດອານຸປະລິນຍາຕີ ສາຂາວິຊາ: <span id="cert-faculty" class="font-bold underline px-1"></span> 
-                            ໃນສົກຮຽນ/ປີ <span id="cert-grad-year" class="font-semibold"></span> 
-                            ດ້ວຍເກຼດສະເລ່ຍ (GPA): <span id="cert-gpa" class="font-bold"></span>.
-                        </p>
-
-                        <p class="indent-8">
-                            ໃບຢັ້ງຢືນສະບັບນີ້ ອອກໃຫ້ເພື່ອຢັ້ງຢືນວ່າ ຜູ້ກ່ຽວໄດ້ຈົບການສຶກສາຢ່າງຖືກຕ້ອງຕາມຫຼັກສູດແທ້ ແລະ ຢູ່ມານລະຫວ່າງລໍຖ້າຮັບໃບປະກາດສະນີຍະບັດຢ່າງເປັນທາງການ.
-                        </p>
-                    </div>
-
-                    <!-- Signatures Section -->
-                    <div class="mt-12 grid grid-cols-2 text-center text-xs gap-4">
-                        <div>
-                            <!-- Seal Placeholder -->
-                            <div class="w-24 h-24 border-2 border-dashed border-red-300 rounded-full mx-auto flex items-center justify-center text-red-400 text-[10px] mb-2">
-                                ກາປະທັບ
-                            </div>
-                        </div>
-                        <div class="space-y-1">
-                            <p>ນະຄອນຫຼວງວຽງຈັນ, ວັນທີ <span id="cert-issue-date">--/--/----</span></p>
-                            <p class="font-bold text-sm mt-2">ຫົວໜ້າສະຖາບັນ / ອະທິການບໍດີ</p>
-                            <div class="h-16"></div> <!-- Space for signature -->
-                            <p class="font-semibold text-slate-500">(ລາຍເຊັນ ແລະ ຕາປະທັບ)</p>
-                        </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600 uppercase mb-2">ເກຣດສະເລ່ຍ (GPA)</label>
+                        <input type="number" step="0.01" min="1.00" max="4.00" id="gpa" value=" " class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- LOGIN MODAL -->
-    <div id="login-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 border border-slate-100">
-            <div class="text-center mb-6">
-                <div class="w-12 h-12 bg-blue-100 text-laoblue rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
-                    <i class="fa-solid fa-lock"></i>
-                </div>
-                <h3 class="font-bold text-lg text-slate-800">ເຂົ້າສູ່ລະບົບຈັດການ</h3>
-                <p class="text-xs text-slate-500 mt-1">ສຳລັບເຈົ້າໜ້າທີ່ / ຜູ້ດູແລລະບົບ</p>
-            </div>
-
-            <form onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">ຊື່ຜູ້ໃຊ້ (Username)</label>
-                    <input type="text" id="login-user" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none" placeholder="admin">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">ລະຫັດຜ່ານ (Password)</label>
-                    <input type="password" id="login-pass" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-laoblue focus:outline-none" placeholder="••••••••">
-                </div>
-                <div id="login-error" class="text-xs text-red-500 hidden text-center font-medium">
-                    ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານ ບໍ່ຖືກຕ້ອງ!
-                </div>
-                <div class="pt-2">
-                    <button type="submit" class="w-full bg-laoblue hover:bg-blue-900 text-white font-semibold py-2.5 rounded-lg text-sm shadow transition cursor-pointer">
-                        ເຂົ້າສູ່ລະບົບ
-                    </button>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                    <button type="button" onclick="switchTab('list')" class="px-5 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50">ຍົກເລີກ</button>
+                    <button type="submit" class="px-5 py-2.5 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-sm font-medium shadow-sm">ບັນທຶກຂໍ້ມູນ</button>
                 </div>
             </form>
-            <div class="mt-4 text-center">
-                <button onclick="closeLoginModal()" class="text-xs text-slate-400 hover:text-slate-600 cursor-pointer">ຍົກເລີກ</button>
+        </div>
+
+    </main>
+
+    <!-- Certificate Modal Preview -->
+    <div id="certificateModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full overflow-hidden flex flex-col max-h-[95vh]">
+            <div class="bg-blue-900 text-white px-6 py-4 flex justify-between items-center no-print">
+                <h3 class="font-bold text-lg">ໃບຢັ້ງຢືນຈົບການສຶກສາ</h3>
+                <button onclick="closeCertificate()" class="text-white hover:text-gray-200">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <div id="certContent" class="p-10 border-8 border-double border-blue-900 m-6 bg-amber-50/30 text-center relative flex-grow overflow-y-auto">
+                <div class="absolute top-4 left-4 text-xs text-gray-400" id="certIdDisplay">STD-2026-001</div>
+                
+                <h3 class="text-sm font-bold text-gray-700 mb-1">ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</h3>
+                <h3 class="text-sm font-semibold text-gray-700 mb-6">ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດຖະນາຖາວອນ</h3>
+                
+                <div class="my-6">
+                    <h1 class="text-2xl font-bold text-blue-900 tracking-wider mb-1">ໃບຢັ້ງຢືນຈົບການສຶກສາ</h1>
+                    <p class="text-xs text-gray-500 uppercase tracking-widest">TEMPORARY GRADUATION CERTIFICATE</p>
+                </div>
+
+                <div class="text-left my-8 space-y-4 text-gray-800 leading-relaxed px-8">
+                    <p><b>ວິທະຍາໄລ ບີຊີທີ ຂໍຢັ້ງຢືນວ່າ:</b></p>
+                    <p class="text-center font-bold text-lg text-black-900 my-2" id="certFullName">ທ້າວ ສົມຊາຍ ພອນສະຫວັນ</p>
+                    <p>ວັນເດືອນປີເກີດ: <span id="certDob" class="font-semibold">15/05/2000</span>, ປັດຈຸບັນຢູ່ບ້ານ: <span id="certAddress" class="font-semibold">ບ.ໂພນສິນວນ, ເມືອງສີສັດຕະນາກ, ນະຄອນຫຼວງວຽງຈັນ</span></p>
+                    <p>ໄດ້ສຳເລັດການສຶກສາຊັ້ນສູງ ຫຼັກສູດອານຸປະລິນຍາຕີ ສາຂາວິຊາ: <span id="certMajor" class="font-semibold text-black-900">ວິທະຍາສາດຄອມພິວເຕີ</span></p>
+                    <p>ສົກສຶກສາ: <span id="certYear" class="font-semibold">2026</span> ດ້ວຍຜົນການຮຽນເກຣດສະເລ່ຍ (GPA): <span id="certGpa" class="font-semibold">3.50</span></p>
+                </div>
+
+                <div class="flex justify-between items-end mt-12 pt-8 px-12">
+                    <div class="text-center">
+                        <p class="text-xs text-gray-500">ວັນທີອອກໃບຢັ້ງຢືນ</p>
+                        <p class="text-sm font-semibold mt-1" id="certIssueDate">04/11/2026</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-sm font-bold text-blue-900">ອຳນວຍການ</p>
+                        <div class="h-16 flex items-center justify-center">
+                            <span class="text-xs text-gray-400 italic">(ລາຍເຊັນ ແລະ ປະທັບຕາ)</span>
+                        </div>
+                        <p class="text-sm font-semibold">(. . . . . . . . . . . . . . . . . . . .)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3 no-print">
+                <button onclick="closeCertificate()" class="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-100">ປິດ</button>
+                <button onclick="window.print()" class="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded-lg text-sm font-medium flex items-center space-x-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    <span>ພິມໃບຢັ້ງຢືນ (Print)</span>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-slate-800 text-white px-4 py-3 rounded-lg shadow-xl text-sm hidden flex items-center space-x-2 z-50">
-        <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
-        <span id="toast-msg">ບັນທຶກຂໍ້ມູນ ສຳເລັດ!</span>
+    <!-- Login Modal -->
+    <div id="loginModal" class="hidden fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">ເຂົ້າສູ່ລະບົບ (Staff Login)</h3>
+            <div class="space-y-4">
+             <div>
+    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Username</label>
+    <input type="text" id="loginUser" value="admin" placeholder="ປ້ອນຊື່ຜູ້ໃຊ້..." class="w-full px-3 py-2 border rounded-lg text-sm">
+</div>
+<div>
+    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Password</label>
+    <input type="password" id="loginPass"  placeholder="ປ້ອນລະຫັດຜ່ານ..." class="w-full px-3 py-2 border rounded-lg text-sm">
+</div>
+            </div>
+            <div class="flex justify-end space-x-2 mt-6">
+                <button onclick="closeLoginModal()" class="px-4 py-2 border rounded-lg text-sm">ຍົກເລີກ</button>
+                <button onclick="handleLogin()" class="px-4 py-2 bg-blue-900 text-white rounded-lg text-sm font-medium">ເຂົ້າສູ່ລະບົບ</button>
+            </div>
+        </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC -->
+    <!-- Script Application Logic -->
     <script>
-        // Data Structures
-        const LAO_PROVINCES = {
-            "ນະຄອນຫຼວງວຽງຈັນ": ["ຈັນທະບູລີ", "ສີໂຄດຕະບອງ", "ໄຊເສດຖາ", "ສີສັດຕະນາກ", "ນາຊາຍທອງ", "ໄຊທານີ", "ຫາດຊາຍຟອງ", "ສັງທອງ", "ປາກງື່ມ"],
-            "ຜົ້ງສາລີ": ["ຜົ້ງສາລີ", "ເມັກ", "ຂວາ", "ສຳພັນ", "ບຸນເໜືອ", "ຍອດອູ", "ບຸນໃຕ້"],
-            "ຫຼວງນ້ຳທາ": ["ນ້ຳທາ", "ສີງ", "ລອງ", "ວຽງພູຄາ", "ນາແລ"],
-            "ອຸດົມໄຊ": ["ໄຊ", "ຫຼາ", "ນາໝໍ", "ແບ່ງ", "ຮຸນ", "ປາກແບ່ງ"],
-            "ບໍ່ແກ້ວ": ["ຫ້ວຍຊາຍ", "ຕົ້ນເຜິ້ງ", "ເມິງ", "ຜາອຸດົມ", "ປາກທາ"],
-            "ຫຼວງພະບາງ": ["ຫຼວງພະບາງ", "ຊຽງເງິນ", "ນານ", "ປາກອູ", "ນ້ຳບັກ", "ງອຍ", "ປາກແຊ່ງ", "ໂພນໄຊ", "ຈອມເພັດ", "ວຽງຄຳ", "ພູຄູນ", "ໂພນທອງ"],
-            "ຫົວພັນ": ["ຊຳເໜືອ", "ຊຽງຄໍ້", "ຮ້ຽມ", "ວຽງໄຊ", "ເມືອງແອດ", "ໂສບເບົາ", "ຊຳໃຕ້", "ຫົວເມືອງ", "ເວີນທອງ"],
-            "ໄຊຍະບູລີ": ["ໄຊຍະບູລີ", "ຄອບ", "ຫົງສາ", "ເງິນ", "ຊຽງຮ່ອນ", "ພຽງ", "ປາກລາຍ", "ແກ່ນທ້າວ", "ໂບຕັ້ນ", "ທົ່ງມີໄຊ", "ໄຊສະຖານ"],
-            "ຊຽງຂວາງ": ["ແປກ", "ຄຳ", "ໜອງແຮດ", "ຄູນ", "ໝອກໃໝ່", "ພູກູດ", "ຜາໄຊ"],
-            "ວຽງຈັນ": ["ໂພນໂຮງ", "ທຸລະຄົມ", "ແກ້ວອຸດົມ", "ກາສີ", "ວັງວຽງ", "ເຟືອງ", "ຊະນະຄາມ", "ແມດ", "ວຽງຄຳ", "ຫີນເຫີບ"],
-            "ບໍລິຄຳໄຊ": ["ປາກຊານ", "ທ່າພະບາດ", "ປາກກະດິງ", "ບໍລິຄັນ", "ຄຳເກີດ", "ວຽງທອງ", "ໄຊຈຳພອນ"],
-            "ຄຳມ່ວນ": ["ທ່າແຂກ", "ມະຫາໄຊ", "ໜອງບົກ", "ຫີນບູນ", "ຍົມມະລາດ", "ບົວລະພາ", "ນາກາຍ", "ເຊບັ້ງໄຟ"],
-            "ສະຫວັນນະເຂດ": ["ໄກສອນ ພົມວິຫານ", "ອຸທຸມພອນ", "ອາສະພັງທອງ", "ພີນ", "ເຊໂປນ", "ນອງ", "ທ່າປາງທອງ", "ຈຳພອນ", "ຊົນນະບູລີ", "ໄຊບູລີ", "ວີລະບູລີ", "ອາສະພອນ", "ໄຊພູທອງ", "ພະລານໄຊ"],
-            "ສາລະວັນ": ["ສາລະວັນ", "ຕະໂອ້ຍ", "ຕຸ້ມລານ", "ລະຄອນເພັງ", "ວາປີ", "ຄົງເຊໂດນ", "ເລົ່າງາມ", "ສະໝ້ວຍ"],
-            "ເຊກອງ": ["ລະມາມ", "ກະເລິມ", "ດັກຈຶງ", "ທ່າແຕງ"],
-            "ຈຳປາສັກ": ["ປາກເຊ", "ຊະນະສົມບູນ", "ບາຈຽງຈະເລີນສຸກ", "ປາກຊ່ອງ", "ປະທຸມພອນ", "ໂພນທອງ", "ຈຳປາສັກ", "ສຸຂຸມາ", "ມູນລະປະໂມກ", "ໂຂງ"],
-            "ອັດຕະປື": ["ສາມັກຄີໄຊ", "ໄຊເສດຖາ", "ສະໜາມໄຊ", "ສານໄຊ", "ພູວົງ"],
-            "ໄຊສົມບູນ": ["ອານຸວົງ", "ລອງແຈ້ງ", "ທ່າໂທມ", "ໂຮມ", "ລອງຊານ"]
-        };
-
-       
-        
-
-        // Global State
-        let students = [];
-        let currentUser = null;
-
-        // Initialize App
-        window.onload = function() {
-            loadStoredData();
-            initDropdowns();
-            renderAuthUI();
-            renderStudentTable();
-            updateAutoCodePreview();
-        };
-
-        function loadStoredData() {
-            const saved = localStorage.getItem('lao_cert_students');
-            if (saved) {
-                try { students = JSON.parse(saved); } catch(e) { students = DEFAULT_STUDENTS; }
-            } else {
-                students = DEFAULT_STUDENTS;
-                saveData();
-            }
-
-            const savedUser = localStorage.getItem('lao_cert_user');
-            if (savedUser) {
-                currentUser = JSON.parse(savedUser);
-            }
-        }
-
-        function saveData() {
-            localStorage.setItem('lao_cert_students', JSON.stringify(students));
-        }
-
-        function initDropdowns() {
-            const provSelect = document.getElementById('province');
-            const filterProv = document.getElementById('filter-province');
+        const laoData = {
+            "ນະຄອນຫຼວງວຽງຈັນ": ["ເມືອງ ຈັນທະບູລີ", "ເມືອງ ສີໂຄດຕະບອງ", "ເມືອງ ໄຊເສດຖາ", "ເມືອງ ສີສັດຕະນາກ", "ເມືອງ ນາຊາຍທອງ", "ເມືອງ ຫາດຊາຍຟອງ", "ເມືອງ ສັງທອງ", "ເມືອງ ປາກງື່ມ","ເມືອງ ໄຊທານີ",],
+            "ແຂວງ ຫຼວງພະບາງ": ["ເມືອງ ຫຼວງພະບາງ", "ເມືອງ ຊຽງເງິນ", "ເມືອງ ນານ", "ເມືອງ ປາກອູ", "ເມືອງ ນ້ຳບາກ", "ເມືອງ ຈອມເພັດ", "ເມືອງ ວຽງຄຳ", "ເມືອງ ພູຄູນ","ເມືອງ ງອຍ"," ເມືອງ ປາກແຊງ","ເມືອງ ໂພນໄຊ","ເມືອງ ໂພນທອງ"],
+            "ແຂວງ ຈຳປາສັກ": ["ເມືອງ ປາກເຊ", "ເມືອງ ຊະນະສົມບູນ", "ເມືອງ ມຸນລະປະໂມກ", "ເມືອງ  ໂຂງ", "ເມືອງ ປາກຊ່ອງ", "ເມືອງ ປະທຸມພອນ", "ເມືອງ ໂພນທອງ","ເມືອງ ບາຈຽງ","ເມືອງ ສຸຂຸມາ","ເມືອງ ຈຳປາສັກ"],
+            "ແຂວງ ສະຫວັນນະເຂດ": ["ເມືອງ ໄກສອນພົມວິຫານ", "ເມືອງ ອຸທຸມພອນ", "ເມືອງ ອາດສະພັງທອງ", "ເມືອງ ພິນ", "ເມືອງ ເຊໂປນ", "ເມືອງ ນອງ", "ເມືອງ ທ່າປາງທອງ","ເມືອງ ສອງຄອນ","ເມືອງ ຈຳພອນ","ເມືອງ ຊົົນນະບູລີ","ເມືອງ ໄຊບູລີ","ເມືອງ ວິລະບູລີ","ເມືອງ ອາດສະພອນ","ເມືອງ ໄຊພູທອງ","ເມືອງ ພະລານໄຊ"],
+            "ແຂວງ ວຽງຈັນ": ["ເມືອງ ໂພນໂຮງ", "ເມືອງ ທຸລະຄົມ", "ເມືອງ ແກ້ວອຸດົມ", "ເມືອງ ກາສີ", "ເມືອງ ວັງວຽງ", "ເມືອງ ເຟືອງ", "ເມືອງ ຊະນະຄາມ","ເມືອງ ວຽງຄຳ","ເມືອງ ຫີນເຫີບ","ເມືອງ ແມດ","ເມືອງ ໝື່ນ"],
+            "ແຂວງ ຜົ້ງສາລີ":["ເມືອງ ບຸນໃຕ້","ເມືອງ ຂວາ","ເມືອງ ໃໝ່","ເມືອງ ຍອດອູ","ເມືອງ ຜົ້ງສາລີ","ເມືອງ ສຳພັນ","ເມືອງ ບຸນເໜືອ"],
+            "ແຂວງ ຫຼວງນ້ຳທາ":["ເມືອງ ສິງ","ເມືອງ ຫຼວງນ້ຳທາ","ເມືອງ ລອງ","ເມືອງ ວຽງພູຄາ","ເມືອງ ນາແລ"],
+            "ແຂວງ ບໍ່ແກ້ວ":["ເມືອງ ຫ້ວຍຊາຍ","ເມືອງ ຕົ້ນເຜິ້ງ","ເມືອງ ເມິງ","ເມືອງ ຜາອຸດົມ","ເມືອງ ປາກທາ"],
+            "ແຂວງ ອຸດົມໄຊ":["ເມືອງ ໄຊ","ເມືອງ ຫລາ","ເມືອງ ນາໝໍ້","ເມືອງ ງາ","ເມືອງ ແບ່ງ","ເມືອງ ຮຸນ","ເມືອງ ປາກແບ່ງ"],
+            "ແຂວງ ໄຊຍະບູລີ":["ເມືອງ ບໍ່ແຕນ","ເມືອງ ຫົງສາ","ເມືອງ ແກ່ນທ້າວ","ເມືອງ ຄອບ","ເມືອງ ເງິນ","ເມືອງ ປາກລາຍ","ເມືອງ ພຽງ","ເມືອງ ທົ່ງມີໄຊ","ເມືອງ ໄຊຍະບູລີ","ເມືອງ ຊຽງຮ່ອນ","ເມືອງ ໄຊສະຖານ"],
+            "ແຂວງ ຫົວພັນ":["ເມືອງ ຊຳເໜືອ","ເມືອງ ຊຽງຄໍ້","ເມືອງ ຮ້ຽມ","ເມືອງ ວຽງໄຊ","ເມືອງ ຫົວເມືອງ","ເມືອງ ຊຳໃຕ້","ເມືອງ ສົບເບົາ","ເມືອງ ແອດ","ເມືອງ ກວັນ","ເມືອງ ຊ່ອນ"],
+            "ແຂວງ ຊຽງຂວາງ":["ເມືອງ ແປກ","ເມືອງ ຄຳ","ເມືອງ ໜອງແຮດ","ເມືອງ ຄູນ","ເມືອງ ໝອກ","ເມືອງ ພູກູດ","ເມືອງ ຜາໄຊ"],
+            "ແຂວງ ໄຊສົມບູນ":["ເມືອງ ລ້ອງແຈ້ງ","ເມືອງ ທ່າໂທມ","ເມືອງ ອະນຸວົງ","ເມືອງ ລ້ອງຊານ","ເມືອງ ຮົ່ມ"],
+            "ແຂວງ ບໍລິຄຳໄຊ":["ເມືອງ ປາກຊັນ","ເມືອງ ທ່າພະບາດ","ເມືອງ ປາກກະດິງ","ເມືອງ ຄຳເກີດ","ເມືອງ ບໍລິຄັນ","ເມືອງ ວຽງທອງ","ເມືອງ ໄຊຈຳພອນ"],
+            "ແຂວງ ຄຳມ່ວນ":["ເມືອງ ທ່າແຂກ","ເມືອງ ມະຫາໄຊ","ເມືອງ ໜອງບົກ","ເມືອງ ຫີນບູນ","ເມືອງ ຍົມມະລາດ","ເມືອງ ບົວລະພາ"," ເມືອງ ນາກາຍ","ເມືອງ ເຊບັ້ງໄຟ","ເມືອງ ໄຊບົວທອງ","ເມືອງ ຄູນຄຳ"],
+            "ແຂວງ ສາລະວັນ":["ເມືອງ ສາລະວັນ","ເມືອງ ລະຄອນເພັງ","ເມືອງ ວາປີ","ເມືອງ ເລົ່າງາມ","ເມືອງ ຕຸ້ມລານ","ເມືອງ ຄົງເຊໂດນ","ເມືອງຕະໂອ້ຍ","ເມືອງ ສະມ້ວຍ"],
+            "ແຂວງ ເຊກອງ":["ເມືອງ ທ່າແຕງ","ເມືອງ ລະມາມ","ເມືອງ ກະລຶມ","ເມືອງ ດາກຈຶງ"],
+            "ແຂວງ ອັດຕະປື":["ເມືອງ ໄຊເສດຖາ","ເມືອງ ສາມັກຄີໄຊ","ເມືອງ ສະໜາມໄຊ","ເມືອງ ຊານໄຊ","ເມືອງ ພູວົງ"],
             
-            Object.keys(LAO_PROVINCES).forEach(prov => {
-                provSelect.appendChild(new Option(prov, prov));
-                filterProv.appendChild(new Option(prov, prov));
-            });
+
+        };
+
+        let isLoggedIn = false;
+        let students = JSON.parse(localStorage.getItem('grad_students')) || [
+            { id: "STD-2026-001", prefix: "ທ້າວ", firstName: "ສົມຊາຍ", lastName: "ພອນສະຫວັນ", dob: "2000-05-15", village: "ບ.ໂພນສິນວນ", province: "ນະຄອນຫຼວງວຽງຈັນ", district: "ເມືອງສີສັດຕະນາກ", major: "ວິທະຍາສາດຄອມພິວເຕີ", year: "2026", gpa: "3.50" },
+            { id: "STD-2026-002", prefix: "ນາງ", firstName: "ຈັນທາ", lastName: "ວົງດາລາ", dob: "2001-08-20", village: "ບ.ຫຼວງພະບາງ", province: "ແຂວງຫຼວງພະບາງ", district: "ເມືອງຫຼວງພະບາງ", major: "ພາສາອັງກິດ", year: "2026", gpa: "3.75" }
+        ];
+
+        window.onload = function() {
+            initProvinces();
+            renderTable();
+            updateGenId();
+        };
+        function formatLaoDate(dateString) {
+            if (!dateString) return "";
+            const laoMonths = [
+            "", "ມັງກອນ", "ກຸມພາ", "ມີນາ", "ເມສາ", "ພຶດສະພາ", "ມິຖຸນາ", 
+             "ກໍລະກົດ", "ສິງຫາ", "ກັນຍາ", "ຕຸລາ", "ພະຈິກ", "ທັນວາ"
+            ];
+         let parts = dateString.split("-"); // ຮັບຄ່າຈາກ input type="date" ເປັນ YYYY-MM-DD
+             if (parts.length !== 3) return dateString;
+    
+            let year = parts[0];
+            let month = parseInt(parts[1], 10);
+            let day = parseInt(parts[2], 10);
+    
+            return `${day} ${laoMonths[month]} ${year}`;
         }
 
-        function onProvinceChange() {
-            const selectedProv = document.getElementById('province').value;
+        function initProvinces() {
+            const provSelect = document.getElementById('province');
+            const filterProv = document.getElementById('filterProvince');
+            provSelect.innerHTML = '<option value="">-- ເລືອກແຂວງ --</option>';
+            filterProv.innerHTML = '<option value="">-- ທຸກໆແຂວງ --</option>';
+            
+            for (let prov in laoData) {
+                provSelect.innerHTML += `<option value="${prov}">${prov}</option>`;
+                filterProv.innerHTML += `<option value="${prov}">${prov}</option>`;
+            }
+        }
+
+        function updateDistricts() {
+            const prov = document.getElementById('province').value;
             const distSelect = document.getElementById('district');
             distSelect.innerHTML = '<option value="">-- ເລືອກເມືອງ --</option>';
-
-            if (selectedProv && LAO_PROVINCES[selectedProv]) {
-                LAO_PROVINCES[selectedProv].forEach(dist => {
-                    distSelect.appendChild(new Option(dist, dist));
+            if (prov && laoData[prov]) {
+                laoData[prov].forEach(dist => {
+                    distSelect.innerHTML += `<option value="${dist}">${dist}</option>`;
                 });
             }
         }
 
-        // Auto Generate Student Code (e.g. STD-2026-004)
-        function generateStudentCode() {
-            const currentYear = new Date().getFullYear();
-            const count = students.length + 1;
-            const seqStr = String(count).padStart(3, '0');
-            return `STD-${currentYear}-${seqStr}`;
+        function generateNextStudentId() {
+            let maxNum = 0;
+            students.forEach(s => {
+                if (s.id && s.id.startsWith("STD-2026-")) {
+                    let parts = s.id.split("-");
+                    let num = parseInt(parts[2]);
+                    if (!isNaN(num) && num > maxNum) {
+                        maxNum = num;
+                    }
+                }
+            });
+            let nextNum = maxNum + 1;
+            return `STD-2026-${String(nextNum).padStart(3, '0')}`;
         }
 
-        function updateAutoCodePreview() {
-            document.getElementById('preview-auto-code').innerText = generateStudentCode();
+        function updateGenId() {
+            const editIdx = document.getElementById('editIndex').value;
+            let id = editIdx === "" ? generateNextStudentId() : students[editIdx].id;
+            document.getElementById('displayGenId').innerText = id;
         }
 
-        function formatLaoDate(dateStr) {
-            if (!dateStr) return '';
-            const monthsLao = ["ມັງກອນ", "ກຸມພາ", "ມີນາ", "ເມສາ", "ພຶດສະພາ", "ມິຖຸນາ", "ກໍລະກົດ", "ສິງຫາ", "ກັນຍາ", "ຕຸລາ", "ພະຈິກ", "ທັນວາ"];
-            const parts = dateStr.split('-');
-            if (parts.length !== 3) return dateStr;
-            const year = parts[0];
-            const monthIdx = parseInt(parts[1], 10) - 1;
-            const day = parts[2];
-            return `${day}/${monthsLao[monthIdx] || parts[1]}/${year}`;
-        }
-
-        // Navigation & Tab Switching
         function switchTab(tab) {
-            const recordsTab = document.getElementById('tab-records');
-            const addTab = document.getElementById('tab-add');
-            const btnRecords = document.getElementById('tab-btn-records');
-            const btnAdd = document.getElementById('tab-btn-add');
+            const listSec = document.getElementById('sectionList');
+            const formSec = document.getElementById('sectionForm');
+            const tabList = document.getElementById('tabList');
+            const tabForm = document.getElementById('tabForm');
 
-            if (tab === 'records') {
-                recordsTab.classList.remove('hidden');
-                addTab.classList.add('hidden');
-                btnRecords.className = "flex-1 md:flex-none px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2 bg-laoblue text-white shadow";
-                btnAdd.className = "flex-1 md:flex-none px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2 text-slate-600 hover:bg-slate-100";
+            if (tab === 'list') {
+                listSec.classList.remove('hidden');
+                formSec.classList.add('hidden');
+                tabList.className = "px-4 py-2.5 rounded-lg text-sm font-medium transition flex items-center space-x-2 bg-blue-900 text-white";
+                tabForm.className = "px-4 py-2.5 rounded-lg text-sm font-medium transition flex items-center space-x-2 bg-gray-100 text-gray-700 hover:bg-gray-200";
             } else {
-                if (!currentUser) {
-                    showToast('ກະລຸນາ ເຂົ້າສູ່ລະບົບ ເພີ່ມ/ແກ້ໄຂ ຂໍ້ມູນ!', true);
+                if (!isLoggedIn) {
                     openLoginModal();
                     return;
                 }
-                updateAutoCodePreview();
-                recordsTab.classList.add('hidden');
-                addTab.classList.remove('hidden');
-                btnAdd.className = "flex-1 md:flex-none px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2 bg-laoblue text-white shadow";
-                btnRecords.className = "flex-1 md:flex-none px-5 py-2.5 rounded-lg text-sm font-semibold transition flex items-center justify-center space-x-2 text-slate-600 hover:bg-slate-100";
+                listSec.classList.add('hidden');
+                formSec.classList.remove('hidden');
+                tabForm.className = "px-4 py-2.5 rounded-lg text-sm font-medium transition flex items-center space-x-2 bg-blue-900 text-white";
+                tabList.className = "px-4 py-2.5 rounded-lg text-sm font-medium transition flex items-center space-x-2 bg-gray-100 text-gray-700 hover:bg-gray-200";
+                
+                resetFormFields();
+                updateGenId();
             }
         }
 
-        // Render Student Table
-        function renderStudentTable(dataToRender = students) {
-            const tbody = document.getElementById('student-table-body');
-            const noData = document.getElementById('no-data-msg');
+        function renderTable() {
+            const tbody = document.getElementById('studentTableBody');
+            const emptyState = document.getElementById('emptyState');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const provVal = document.getElementById('filterProvince').value;
+            const majorVal = document.getElementById('filterMajor').value;
+
             tbody.innerHTML = '';
 
-            if (dataToRender.length === 0) {
-                noData.classList.remove('hidden');
-                return;
-            }
-            noData.classList.add('hidden');
+            let filtered = students.filter(s => {
+                let fullName = `${s.prefix} ${s.firstName} ${s.lastName}`.toLowerCase();
+                let matchSearch = fullName.includes(searchVal) || s.id.toLowerCase().includes(searchVal);
+               let matchProv = provVal === "" || (s.province && s.province.includes(provVal));
+                let matchMajor = majorVal === "" || s.major === majorVal;
+                return matchSearch && matchProv && matchMajor;
+            });
 
-            dataToRender.forEach(std => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 border-b border-slate-100 transition";
-                const fullName = `${std.prefixName ? std.prefixName + ' ' : ''}${std.firstname} ${std.lastname}`;
-                
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            } else {
+                emptyState.classList.add('hidden');
+            }
+
+            filtered.forEach((s) => {
+                let realIndex = students.findIndex(item => item.id === s.id);
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-blue-50/50 transition border-b border-gray-100";
                 tr.innerHTML = `
-                    <td class="p-4 font-semibold text-laoblue">${std.code}</td>
-                    <td class="p-4 font-medium text-slate-800">${fullName}</td>
-                    <td class="p-4 text-slate-600">${formatLaoDate(std.dobDate)}</td>
-                    <td class="p-4 text-slate-600">ບ.${std.village}, ມ.${std.district}, ແຂວງ.${std.province}</td>
-                    <td class="p-4"><span class="bg-blue-50 text-laoblue px-2.5 py-1 rounded-md text-xs font-semibold">${std.faculty}</span></td>
-                    <td class="p-4 text-slate-600 font-medium">${std.gradYear}</td>
-                    <td class="p-4 text-center space-x-1">
-                        <button onclick="previewCertificate('${std.id}')" title="ພິມໃບຢັ້ງຢືນ" class="p-2 bg-slate-100 hover:bg-laoblue hover:text-white text-slate-600 rounded-lg transition cursor-pointer">
-                            <i class="fa-solid fa-print"></i>
-                        </button>
-                        ${currentUser ? `
-                            <button onclick="editStudent('${std.id}')" title="ແກ້ໄຂ" class="p-2 bg-slate-100 hover:bg-amber-500 hover:text-white text-slate-600 rounded-lg transition cursor-pointer">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </button>
-                            <button onclick="deleteStudent('${std.id}')" title="ລົບ" class="p-2 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-600 rounded-lg transition cursor-pointer">
-                                <i class="fa-solid fa-trash"></i>
-                            </button>
-                        ` : ''}
-                    </td>
+                    <td class="p-4 font-semibold text-blue-900">${s.id}</td>
+                    <td class="p-4">${s.prefix} ${s.firstName} ${s.lastName}</td>
+                    <td class="p-4">${formatLaoDate(s.dob)}</td>
+                    <td class="p-4 text-xs text-gray-500">${s.village}, ${s.district}, ${s.province}</td>
+                    <td class="p-4"><span class="px-2.5 py-1 bg-blue-50 text-blue-800 rounded-full text-xs font-medium">${s.major}</span></td>
+                    <td class="p-4">${s.year}</td>
+                   <td class="p-4 text-center space-x-2">
+                    ${isLoggedIn ? `
+                        <button onclick="printCertificate(${realIndex})" title="ພິມໃບຢັ້ງຢືນ" class="p-1.5 bg-gray-100 text-gray-700 rounded hover:bg-blue-900 hover:text-white transition">🖨️</button>
+                        <button onclick="editStudent(${realIndex})" title="ແກ້ໄຂ" class="p-1.5 bg-amber-50 text-amber-700 rounded hover:bg-amber-600 hover:text-white transition">✏️</button>
+                        <button onclick="deleteStudent(${realIndex})" title="ລຶບ" class="p-1.5 bg-rose-50 text-rose-700 rounded hover:bg-rose-600 hover:text-white transition">🗑️</button>
+                         ` : `
+                         <span class="text-xs text-gray-400 italic"></span>
+                    `}
+</td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // Filtering
-        function filterData() {
-            const query = document.getElementById('search-input').value.toLowerCase();
-            const province = document.getElementById('filter-province').value;
-            const faculty = document.getElementById('filter-faculty').value;
-
-            const filtered = students.filter(s => {
-                const searchStr = `${s.prefixName || ''} ${s.firstname} ${s.lastname} ${s.code}`.toLowerCase();
-                const matchesQuery = searchStr.includes(query);
-                const matchesProv = !province || s.province === province;
-                const matchesFaculty = !faculty || s.faculty === faculty;
-                return matchesQuery && matchesProv && matchesFaculty;
-            });
-
-            renderStudentTable(filtered);
-        }
-
-        // Handle Add / Edit Form Submit
-        function handleFormSubmit(e) {
+        function saveStudent(e) {
             e.preventDefault();
-            if (!currentUser) {
-                openLoginModal();
-                return;
-            }
-
-            const id = document.getElementById('student-id').value;
-            const autoCode = id ? (students.find(s => s.id === id)?.code || generateStudentCode()) : generateStudentCode();
-
-            const studentObj = {
-                id: id || autoCode,
-                code: autoCode,
-                prefixName: document.getElementById('prefix-name').value,
-                firstname: document.getElementById('firstname').value,
-                lastname: document.getElementById('lastname').value,
-                dobDate: document.getElementById('dob-date').value,
+            const editIdx = document.getElementById('editIndex').value;
+            
+            const studentData = {
+                id: editIdx === "" ? generateNextStudentId() : students[editIdx].id,
+                prefix: document.getElementById('prefix').value,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                dob: document.getElementById('dob').value,
                 village: document.getElementById('village').value,
                 province: document.getElementById('province').value,
                 district: document.getElementById('district').value,
-                faculty: document.getElementById('faculty').value,
-                gradYear: document.getElementById('grad-year').value,
-                gpa: document.getElementById('gpa').value || '3.00'
+                major: document.getElementById('major').value,
+                year: document.getElementById('graduationYear').value,
+                gpa: document.getElementById('gpa').value
             };
 
-            if (id) {
-                const index = students.findIndex(s => s.id === id);
-                if (index !== -1) students[index] = studentObj;
-                showToast('ອັບເດດຂໍ້ມູນນັກສຶກສາ ສຳເລັດ!');
+            if (editIdx === "") {
+                students.push(studentData);
             } else {
-                students.unshift(studentObj);
-                showToast('ບັນທຶກຂໍ້ມູນນັກສຶກສາ ໃໝ່ສຳເລັດ!');
+                students[editIdx] = studentData;
             }
 
-            saveData();
-            resetForm();
-            renderStudentTable();
-            switchTab('records');
+            localStorage.setItem('grad_students', JSON.stringify(students));
+            switchTab('list');
+            renderTable();
         }
 
-        function editStudent(id) {
-            const std = students.find(s => s.id === id);
-            if (!std) return;
-
-            document.getElementById('student-id').value = std.id;
-            document.getElementById('prefix-name').value = std.prefixName || '';
-            document.getElementById('firstname').value = std.firstname;
-            document.getElementById('lastname').value = std.lastname;
-            document.getElementById('dob-date').value = std.dobDate || '';
-            document.getElementById('village').value = std.village;
-            document.getElementById('province').value = std.province;
-            onProvinceChange();
-            document.getElementById('district').value = std.district;
-            document.getElementById('faculty').value = std.faculty;
-            document.getElementById('grad-year').value = std.gradYear;
-            document.getElementById('gpa').value = std.gpa;
-
-            document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-user-pen text-amber-500"></i><span>ແກ້ໄຂຂໍ້ມູນນັກສຶກສາ</span>';
-            switchTab('add');
+        function editStudent(index) {
+            switchTab('form');
+            document.getElementById('formTitle').innerText = "ແກ້ໄຂຂໍ້ມູນນັກສຶກສາ";
+            document.getElementById('editIndex').value = index;
+            
+            const s = students[index];
+            document.getElementById('displayGenId').innerText = s.id;
+            document.getElementById('prefix').value = s.prefix;
+            document.getElementById('firstName').value = s.firstName;
+            document.getElementById('lastName').value = s.lastName;
+            document.getElementById('dob').value = s.dob;
+            document.getElementById('village').value = s.village;
+            document.getElementById('province').value = s.province;
+            updateDistricts();
+            document.getElementById('district').value = s.district;
+            document.getElementById('major').value = s.major;
+            document.getElementById('graduationYear').value = s.year;
+            document.getElementById('gpa').value = s.gpa;
         }
 
-        function deleteStudent(id) {
-            if (confirm('ທ່ານແນ່ໃຈບໍ ວ່າຕ້ອງການລົບຂໍ້ມູນນັກສຶກສານີ້?')) {
-                students = students.filter(s => s.id !== id);
-                saveData();
-                renderStudentTable();
-                showToast('ລົບຂໍ້ມູນສຳເລັດແລ້ວ');
+        function deleteStudent(index) {
+            if (confirm("ທ່ານຕ້ອງການລຶບຂໍ້ມູນນັກສຶກສານີ້ແທ້ບໍ?")) {
+                students.splice(index, 1);
+                localStorage.setItem('grad_students', JSON.stringify(students));
+                renderTable();
             }
+        }
+
+        function resetFormFields() {
+            document.getElementById('formTitle').innerText = "ຟອມບັນທຶກຂໍ້ມູນນັກສຶກສາ";
+            document.getElementById('editIndex').value = "";
+            document.getElementById('studentForm').reset();
+            updateGenId();
         }
 
         function resetForm() {
-            document.getElementById('student-form').reset();
-            document.getElementById('student-id').value = '';
-            document.getElementById('form-title').innerHTML = '<i class="fa-solid fa-id-card text-laoblue"></i><span>ຟອມບັນທຶກຂໍ້ມູນນັກສຶກສາ</span>';
-            updateAutoCodePreview();
+            resetFormFields();
         }
 
-        // Certificate Modal Logic
-        function previewCertificate(id) {
-            const std = students.find(s => s.id === id);
-            if (!std) return;
+        function printCertificate(index) {
+            const s = students[index];
+            document.getElementById('certIdDisplay').innerText = s.id;
+            document.getElementById('certFullName').innerText = `${s.prefix} ${s.firstName} ${s.lastName}`;
+            document.getElementById('certDob').innerText = formatLaoDate(s.dob);
+            document.getElementById('certAddress').innerText = `${s.village}, ${s.district}, ${s.province}`;
+            document.getElementById('certMajor').innerText = s.major;
+            document.getElementById('certYear').innerText = s.year;
+            document.getElementById('certGpa').innerText = s.gpa;
+            
+            const today = new Date().toLocaleDateString('lo-LA');
+            document.getElementById('certIssueDate').innerText = today;
 
-            document.getElementById('cert-doc-no').innerText = Math.floor(100 + Math.random() * 900) + "/ສສ";
-            document.getElementById('cert-fullname').innerText = `${std.prefixName ? std.prefixName + ' ' : ''}${std.firstname} ${std.lastname}`;
-            document.getElementById('cert-dob-formatted').innerText = formatLaoDate(std.dobDate);
-            document.getElementById('cert-village').innerText = std.village;
-            document.getElementById('cert-district').innerText = std.district;
-            document.getElementById('cert-province').innerText = std.province;
-            document.getElementById('cert-faculty').innerText = std.faculty;
-            document.getElementById('cert-grad-year').innerText = std.gradYear;
-            document.getElementById('cert-gpa').innerText = std.gpa;
-
-            const today = new Date();
-            const dateStr = `${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
-            document.getElementById('cert-issue-date').innerText = dateStr;
-
-            document.getElementById('cert-modal').classList.remove('hidden');
+            document.getElementById('certificateModal').classList.remove('hidden');
         }
 
-        function closeCertModal() {
-            document.getElementById('cert-modal').classList.add('hidden');
-        }
-
-        function triggerPrint() {
-            window.print();
-        }
-
-        // Excel Export Logic using SheetJS
-        function exportToExcel() {
-            if (students.length === 0) {
-                showToast('ບໍ່ມີຂໍ້ມູນ ສຳລັບສົ່ງອອກ!', true);
-                return;
-            }
-
-            const exportData = students.map((s, index) => ({
-                "ລຳດັບ": index + 1,
-                "ລະຫັດນັກສຶກສາ": s.code,
-                "ຄຳນຳໜ້າ": s.prefixName || '',
-                "ຊື່": s.firstname,
-                "ນາມສະກຸນ": s.lastname,
-                "ວັນເດືອນປີເກີດ": formatLaoDate(s.dobDate),
-                "ບ້ານ": s.village,
-                "ເມືອງ": s.district,
-                "ແຂວງ": s.province,
-                "ສາຂາວິຊາ": s.faculty,
-                "ປີຈົບ": s.gradYear,
-                "ເກຼດ GPA": s.gpa
-            }));
-
-            const worksheet = XLSX.utils.json_to_sheet(exportData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "ລາຍຊື່ນັກສຶກສາຈົບການສຶກສາ");
-
-            XLSX.writeFile(workbook, `Student_Graduation_Report_${new Date().toISOString().slice(0,10)}.xlsx`);
-            showToast('ສົ່ງອອກຟາຍ Excel ສຳເລັດ!');
-        }
-
-        // Authentication Handlers
-        function renderAuthUI() {
-            const container = document.getElementById('nav-user-controls');
-            if (currentUser) {
-                container.innerHTML = `
-                    <div class="flex items-center space-x-2 text-xs bg-blue-900/50 px-3 py-1.5 rounded-lg border border-blue-400/30">
-                        <i class="fa-solid fa-user-shield text-emerald-400"></i>
-                        <span>${currentUser.username}</span>
-                    </div>
-                    <button onclick="handleLogout()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer">
-                        ອອກຈາກລະບົບ
-                    </button>
-                `;
-            } else {
-                container.innerHTML = `
-                    <button onclick="openLoginModal()" class="bg-white/10 hover:bg-white/20 text-white border border-white/20 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1 cursor-pointer">
-                        <i class="fa-solid fa-right-to-bracket"></i> ເຂົ້າສູ່ລະບົບ (Staff)
-                    </button>
-                `;
-            }
+        function closeCertificate() {
+            document.getElementById('certificateModal').classList.add('hidden');
         }
 
         function openLoginModal() {
-            document.getElementById('login-modal').classList.remove('hidden');
+            if (isLoggedIn) {
+                if (confirm("ທ່ານຕ້ອງການອອກຈາກລະບົບ (Log out) ບໍ?")) {
+                    isLoggedIn = false;
+                    document.getElementById('authBtnText').innerText = "ເຂົ້າສູ່ລະບົບ (Staff)";
+                    renderTable();
+                    switchTab('list');
+                }
+            } else {
+                document.getElementById('loginModal').classList.remove('hidden');
+            }
         }
 
         function closeLoginModal() {
-            document.getElementById('login-modal').classList.add('hidden');
-            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('loginModal').classList.add('hidden');
         }
 
-        function handleLogin(e) {
-            e.preventDefault();
-            const user = document.getElementById('login-user').value;
-            const pass = document.getElementById('login-pass').value;
-
-            if (user === 'admin' && pass === 'admin123') {
-                currentUser = { username: 'admin' };
-                localStorage.setItem('lao_cert_user', JSON.stringify(currentUser));
+        function handleLogin() {
+            const u = document.getElementById('loginUser').value;
+            const p = document.getElementById('loginPass').value;
+            if (u === 'admin' && p === 'admin123') {
+                isLoggedIn = true;
+                document.getElementById('authBtnText').innerText = "ອອກຈາກລະບົບ (Staff)";
                 closeLoginModal();
-                renderAuthUI();
-                renderStudentTable();
-                showToast('ເຂົ້າສູ່ລະບົບ ສຳເລັດ!');
+                renderTable();
+                alert("ເຂົ້າສູ່ລະບົບສຳເລັດ!");
             } else {
-                document.getElementById('login-error').classList.remove('hidden');
+                alert("Username ຫຼື Password ບໍ່ຖືກຕ້ອງ!");
             }
         }
 
-        function handleLogout() {
-            currentUser = null;
-            localStorage.removeItem('lao_cert_user');
-            renderAuthUI();
-            renderStudentTable();
-            switchTab('records');
-            showToast('ອອກຈາກລະບົບ ແລ້ວ');
-        }
+        function exportToExcel() {
+            let dataToExport = students.map((s, i) => ({
+                "ລຳດັບ": i + 1,
+                "ລະຫັດນັກສຶກສາ": s.id,
+                "ຄຳນຳໜ້າຊື່": s.prefix,
+                "ຊື່": s.firstName,
+                "ນາມສະກຸນ": s.lastName,
+                "ວັນເດືອນປີເກີດ": s.dob,
+                "ບ້ານ": s.village,
+                "ເມືອງ": s.district,
+                "ແຂວງ": s.province,
+                "ສາຂາວິຊາ": s.major,
+                "ປີຈົບ": s.year,
+                "GPA": s.gpa
+            }));
 
-        // Helper Utility: Toast Notification
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toast-msg');
-            toastMsg.innerText = message;
-            
-            if (isError) {
-                toast.className = "fixed bottom-5 right-5 bg-red-800 text-white px-4 py-3 rounded-lg shadow-xl text-sm flex items-center space-x-2 z-50 transition";
-            } else {
-                toast.className = "fixed bottom-5 right-5 bg-slate-800 text-white px-4 py-3 rounded-lg shadow-xl text-sm flex items-center space-x-2 z-50 transition";
-            }
-
-            toast.classList.remove('hidden');
-            setTimeout(() => {
-                toast.classList.add('hidden');
-            }, 3000);
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+            XLSX.writeFile(workbook, "Graduation_Students_List.xlsx");
         }
     </script>
 </body>
